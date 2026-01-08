@@ -85,7 +85,7 @@ export default function Home() {
       if (avatarSession && sessionId) {
         // Stop server session first
         try {
-          await fetch('http://localhost:3100/api/liveavatar/session/stop', {
+          await fetch('/api/liveavatar/session/stop', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ session_id: sessionId })
@@ -128,7 +128,7 @@ export default function Home() {
 
     try {
       // 1. Fetch session token from backend
-      const tokenRes = await fetch('http://localhost:3100/api/liveavatar/session/token', {
+      const tokenRes = await fetch('/api/liveavatar/session/token', {
         method: 'POST'
       });
       const tokenData = await tokenRes.json();

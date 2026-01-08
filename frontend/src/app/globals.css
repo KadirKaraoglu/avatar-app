@@ -1,16 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a0a;
+  --foreground: #ffffff;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: linear-gradient(-45deg, #0a0a0a, #1a1a1a, #2d2d2d, #FFC107, #FFD54F);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
   font-family: Arial, Helvetica, sans-serif;
   overflow: hidden;
   /* Prevent scrolling for kiosk feel */
+}
+
+/* Gradient Background Animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Custom Breathing Animation for Button */
