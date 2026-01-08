@@ -31,6 +31,7 @@ export default function Home() {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [avatarSession, setAvatarSession] = useState<any>(null); // HeyGen SDK session
+  const [isLoading, setIsLoading] = useState(false); // Loading state for avatar initialization
 
   // Ensure audio plays when video element is ready
   useEffect(() => {
@@ -106,6 +107,7 @@ export default function Home() {
 
       // 6. Reset states
       setIsSessionActive(false);
+      setIsLoading(false);
       setSessionId(null);
       setAvatarClient(null);
       setGeminiService(null);
@@ -123,6 +125,7 @@ export default function Home() {
   const startSession = async () => {
     if (sessionStarted.current) return;
     sessionStarted.current = true;
+    setIsLoading(true); // Show loading animation
 
     console.log("Creating CUSTOM mode session...");
 
@@ -182,11 +185,13 @@ export default function Home() {
       setMicrophoneService(microphone);
 
       setIsSessionActive(true);
+      setIsLoading(false); // Hide loading animation
 
     } catch (error) {
       console.error("Session setup error:", error);
       sessionStarted.current = false;
       setIsSessionActive(false);
+      setIsLoading(false); // Hide loading animation on error
     }
   };
 
@@ -201,18 +206,28 @@ export default function Home() {
             ELAZIĞ ORGANİZE SANAYİ MÜDÜRLÜĞÜ
           </h1>
 
-          {/* Start Button */}
-          <button
-            onClick={startSession}
-            className="group relative px-8 py-5 bg-[#FFC107] hover:bg-[#FFD54F] text-black text-xl font-bold rounded-2xl shadow-[0_0_20px_rgba(255,193,7,0.5)] transition-all duration-300 transform hover:scale-105 active:scale-95 animate-breathing"
-          >
-            <span className="relative z-10 flex items-center gap-3">
-              ASİSTANA BAĞLANMAK İÇİN TIKLAYINIZ
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            </span>
-          </button>
+          {/* Show Loading Spinner or Start Button */}
+          {isLoading ? (
+            <div className="flex flex-col items-center gap-4">
+              {/* Spinner */}
+              <div className="w-20 h-20 border-4 border-[#FFC107] border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xl font-semibold text-[#FFC107] animate-pulse">
+                Avatar Yükleniyor...
+              </p>
+            </div>
+          ) : (
+            <button
+              onClick={startSession}
+              className="group relative px-8 py-5 bg-[#FFC107] hover:bg-[#FFD54F] text-black text-xl font-bold rounded-2xl shadow-[0_0_20px_rgba(255,193,7,0.5)] transition-all duration-300 transform hover:scale-105 active:scale-95 animate-breathing"
+            >
+              <span className="relative z-10 flex items-center gap-3">
+                ASİSTANA BAĞLANMAK İÇİN TIKLAYINIZ
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+              </span>
+            </button>
+          )}
         </div>
       )}
 
