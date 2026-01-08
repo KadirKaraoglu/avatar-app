@@ -1,0 +1,58 @@
+VOICES:
+============================================================
+
+Voice #1:
+  ID: c2527536-6d1f-4412-a643-53a3497dada9
+  Name: Wayne Liang
+  Language: en
+  Gender: male
+
+Voice #2:
+  ID: 83a26e3f-bcff-4887-80a2-17531c342c9e
+  Name: Thaddeus - IA
+  Language: en
+  Gender: male
+
+Voice #3:
+  ID: b139a8fe-7240-4454-ac37-8c68aebcee41
+  Name: Silas - Lifelike
+  Language: en
+  Gender: male
+
+Voice #4:
+  ID: 51afbab6-7af4-473b-95fc-6ce26aac8bb1
+  Name: Shawn - IA
+  Language: en
+  Gender: male
+
+Voice #5:
+  ID: bcc6960c-b2d3-41e9-a8a5-2780ce6abe2e
+  Name: Santa - Public
+  Language: en
+  Gender: male
+
+============================================================
+CONTEXTS:
+============================================================
+
+Context #1:
+  ID: 667fc090-191d-4dc2-861b-e6d15e1ac03c
+  Created: 2026-01-06T12:44:46
+
+Context #2:
+  ID: 6dc400e0-9a06-481f-a6cf-f40dc5a7afaf
+  Created: 2026-01-06T12:44:46
+
+Context #3:
+  ID: 330c3f54-291a-4deb-a103-b43b0279ca9d
+  Created: 2026-01-06T12:44:46
+
+Context #4:
+  ID: f539ae6b-3041-4462-bbc6-a4db67f6e8de
+  Created: 2026-01-06T12:44:46
+
+============================================================
+SUGGESTED VALUES:
+============================================================
+voice_id: c2527536-6d1f-4412-a643-53a3497dada9
+context_id: 667fc090-191d-4dc2-861b-e6d15e1ac03c

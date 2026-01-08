@@ -1,0 +1,101 @@
+Title: Create Session Token
+
+URL Source: https://docs.liveavatar.com/reference/create_session_token_v1_sessions_token_post
+
+Markdown Content:
+Create Session Token
+===============
+
+[Jump to Content](https://docs.liveavatar.com/reference/create_session_token_v1_sessions_token_post#content)
+
+[![Image 1: LiveAvatar](https://files.readme.io/a75fda71d838cdee29b59a07355e0d8a5014534cefb2d52b7757198e7ad2a660-LiveAvatarLogo_black.svg)](https://docs.liveavatar.com/)
+
+[Guides](https://docs.liveavatar.com/docs)[API Reference](https://docs.liveavatar.com/reference)[Changelog](https://docs.liveavatar.com/changelog)[Discussions](https://docs.liveavatar.com/discuss)
+
+v 1.0
+
+* * *
+
+[Log In](https://docs.liveavatar.com/login?redirect_uri=/reference/create_session_token_v1_sessions_token_post)[![Image 2: LiveAvatar](https://files.readme.io/a75fda71d838cdee29b59a07355e0d8a5014534cefb2d52b7757198e7ad2a660-LiveAvatarLogo_black.svg)](https://docs.liveavatar.com/)
+
+API Reference
+
+[Log In](https://docs.liveavatar.com/login?redirect_uri=/reference/create_session_token_v1_sessions_token_post)
+
+v1.0[Guides](https://docs.liveavatar.com/docs)[API Reference](https://docs.liveavatar.com/reference)[Changelog](https://docs.liveavatar.com/changelog)[Discussions](https://docs.liveavatar.com/discuss)Create Session Token
+
+Search
+
+All
+
+Pages
+
+###### Start typing to search…
+
+JUMP TO
+
+LiveAvatar API
+--------------
+
+*   [Sessions](https://docs.liveavatar.com/reference/create_session_token_v1_sessions_token_post)
+    *   [Create Session Token post](https://docs.liveavatar.com/reference/create_session_token_v1_sessions_token_post)
+    *   [Start Session post](https://docs.liveavatar.com/reference/start_session_v1_sessions_start_post)
+    *   [Stop Session post](https://docs.liveavatar.com/reference/stop_session_v1_sessions_stop_post)
+    *   [Keep Session Alive post](https://docs.liveavatar.com/reference/keep_session_alive_v1_sessions_keep_alive_post)
+    *   [List Sessions get](https://docs.liveavatar.com/reference/list_sessions_v1_sessions_get)
+    *   [Get Session Transcript get](https://docs.liveavatar.com/reference/get_session_transcript_v1_sessions__session_id__transcript_get)
+    *   [Sending Session Events](https://docs.liveavatar.com/docs/command-events#/)
+
+*   [Avatar](https://docs.liveavatar.com/reference/list_public_avatars_v1_avatars_public_get)
+    *   [List Public Avatars get](https://docs.liveavatar.com/reference/list_public_avatars_v1_avatars_public_get)
+    *   [List User Avatars get](https://docs.liveavatar.com/reference/list_user_avatars_v1_avatars_get)
+    *   [Get Avatar By Id get](https://docs.liveavatar.com/reference/get_avatar_by_id_v1_avatars__avatar_id__get)
+    *   [Update Avatar patch](https://docs.liveavatar.com/reference/update_avatar_v1_avatars__avatar_id__patch)
+    *   [Delete Avatar del](https://docs.liveavatar.com/reference/delete_avatar_v1_avatars__avatar_id__delete)
+    *   [Create Avatar post](https://docs.liveavatar.com/reference/create_avatar_v1_avatars_post)
+
+*   [Contexts](https://docs.liveavatar.com/reference/create_context_v1_contexts_post)
+    *   [Create Context post](https://docs.liveavatar.com/reference/create_context_v1_contexts_post)
+    *   [List User Contexts get](https://docs.liveavatar.com/reference/list_user_contexts_v1_contexts_get)
+    *   [Get Context By Id get](https://docs.liveavatar.com/reference/get_context_by_id_v1_contexts__context_id__get)
+    *   [Update Context patch](https://docs.liveavatar.com/reference/update_context_v1_contexts__context_id__patch)
+    *   [Delete Context del](https://docs.liveavatar.com/reference/delete_context_v1_contexts__context_id__delete)
+
+*   [Voices](https://docs.liveavatar.com/reference/list_voices_v1_voices_get)
+    *   [List Voices get](https://docs.liveavatar.com/reference/list_voices_v1_voices_get)
+    *   [Get Voice By Id get](https://docs.liveavatar.com/reference/get_voice_by_id_v1_voices__voice_id__get)
+
+Powered by[](https://readme.com/?ref_src=hub&project=liveavatar)
+
+Create Session Token
+====================
+
+post
+
+https://api.liveavatar.com/v1/sessions/token
+
+Create session token for authenticated user
+
+Creates a session token that allows clients to interact with the session object. The returned session token enables management of our LiveKit WebRTC room, usable by both your front-end client or backend client to manage the LiveAvatar Session.
+
+Be sure to start your session with the token created here.
+
+Once the session is configured, as of now, **it is immutable**. We intend to support making configuration changes in the near future.
+
+When specifying FULL mode, we expect `avatar_persona` to be set.
+
+When specifying CUSTOM mode, we expect the `livekit_config` to be set.
+
+Language
+
+Shell Node Ruby PHP Python
+
+Credentials
+
+Header
+
+Header
+
+Response
+
+Click `Try It!` to start a request and see the response here!
