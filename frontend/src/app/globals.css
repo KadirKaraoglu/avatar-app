@@ -7,12 +7,13 @@
 
 body {
   color: var(--foreground);
-  background: linear-gradient(-45deg, #0a0a0a, #1a1a1a, #2d2d2d, #FFC107, #FFD54F);
+  /* Full Logo Color Spectrum Animated Gradient */
+  /* Colors: Navy (#1B1464), Purple (#662D91), Red (#ED1C24), Orange (#F15A24), Yellow (#FBB03B), Cyan (#29ABE2) */
+  background: linear-gradient(-45deg, #1B1464, #662D91, #ED1C24, #FBB03B, #29ABE2, #1B1464);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   font-family: Arial, Helvetica, sans-serif;
   overflow: hidden;
-  /* Prevent scrolling for kiosk feel */
 }
 
 /* Gradient Background Animation */

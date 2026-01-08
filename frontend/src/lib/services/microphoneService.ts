@@ -5,6 +5,7 @@ export class MicrophoneService {
     private audioContext: AudioContext | null = null;
     private mediaStream: MediaStream | null = null;
     private processor: ScriptProcessorNode | null = null;
+    private isMuted = false; // Flag to control audio processing
 
     constructor(
         private onAudioData: (audioChunk: string) => void,
@@ -31,6 +32,11 @@ export class MicrophoneService {
             this.processor = this.audioContext.createScriptProcessor(bufferSize, 1, 1);
 
             this.processor.onaudioprocess = (event) => {
+                // Skip processing if muted (avatar is speaking)
+                if (this.isMuted) {
+                    return;
+                }
+
                 const inputData = event.inputBuffer.getChannelData(0);
 
                 // Convert Float32Array to Int16Array (PCM)
@@ -72,6 +78,29 @@ export class MicrophoneService {
         }
 
         console.log("Microphone stopped");
+    }
+
+    /**
+     * Mute microphone - stops sending audio to Gemini (for echo prevention)
+     */
+    public mute() {
+        this.isMuted = true;
+        console.log("🔇 Microphone MUTED (Avatar speaking)");
+    }
+
+    /**
+     * Unmute microphone - resumes sending audio to Gemini
+     */
+    public unmute() {
+        this.isMuted = false;
+        console.log("🔊 Microphone UNMUTED (Avatar finished)");
+    }
+
+    /**
+     * Get current muted state
+     */
+    public getIsMuted(): boolean {
+        return this.isMuted;
     }
 
     private arrayBufferToBase64(buffer: ArrayBuffer): string {

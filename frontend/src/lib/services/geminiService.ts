@@ -2,14 +2,22 @@ export class GeminiService {
     private socket: WebSocket | null = null;
     private onAudioData: (base64Audio: string) => void;
     private onInterrupt: (() => void) | null = null;
+    private onAvatarSpeakingStart: (() => void) | null = null;
+    private onAvatarSpeakingEnd: (() => void) | null = null;
     private url = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent";
+    private unmuteTimer: NodeJS.Timeout | null = null; // Failsafe timer for unmute
+    private predictedSpeechEndTime: number = 0; // Timestamp when audio playback is expected to end
 
     constructor(
         onAudioData: (base64Audio: string) => void,
-        onInterrupt?: () => void
+        onInterrupt?: () => void,
+        onAvatarSpeakingStart?: () => void,
+        onAvatarSpeakingEnd?: () => void
     ) {
         this.onAudioData = onAudioData;
         this.onInterrupt = onInterrupt || null;
+        this.onAvatarSpeakingStart = onAvatarSpeakingStart || null;
+        this.onAvatarSpeakingEnd = onAvatarSpeakingEnd || null;
     }
 
     public connect(apiKey: string) {
@@ -144,7 +152,10 @@ KURALLAR:
             data = JSON.parse(event.data);
         }
 
+        // Log full message structure for debugging
         console.log("📨 Gemini message:", JSON.stringify(data).substring(0, 200));
+        console.log("🔍 [DEBUG] serverContent:", data.serverContent);
+        console.log("🔍 [DEBUG] turnComplete:", data.serverContent?.turnComplete);
 
         // Check for server-side interruption (Barge-in)
         // Note: The specific field for interruption might vary, but turnComplete often signals end of turn
@@ -176,6 +187,13 @@ KURALLAR:
             console.error("❌ Gemini error:", data.error);
         }
 
+        // Check for turn completion (avatar finished speaking)
+        if (data.serverContent?.turnComplete) {
+            console.log("🎤 [GEMINI] Turn complete - Generation finished (still playing audio)");
+            // We DO NOT unmute here anymore. We wait for the audio playback timer to expire.
+            // This ensures we don't unmute while the avatar is still speaking the generated audio.
+        }
+
         // Parse server content - prioritize AUDIO for CUSTOM mode
         if (data.serverContent?.modelTurn?.parts) {
             for (const part of data.serverContent.modelTurn.parts) {
@@ -183,6 +201,42 @@ KURALLAR:
                 if (part.inlineData && part.inlineData.mimeType.startsWith("audio/")) {
                     const base64Audio = part.inlineData.data;
                     console.log("✓ Gemini audio received - Length:", base64Audio.length, "chars");
+
+                    // Notify that avatar is about to speak (mute microphone)
+                    if (this.onAvatarSpeakingStart) {
+                        this.onAvatarSpeakingStart();
+                    }
+
+                    // Calculate accurate duration
+                    // Base64 (4 chars = 3 bytes) -> PCM 16-bit (2 bytes/sample) -> 24kHz (24000 samples/sec)
+                    const byteLength = base64Audio.length * 0.75;
+                    const sampleRate = 24000; // Gemini default for this model
+                    const audioDurationMs = (byteLength / (sampleRate * 2)) * 1000;
+
+                    // Accumulate duration logic (Queue System)
+                    const now = Date.now();
+                    // If we are already playing (predicted end is in future), add to it. 
+                    // If not (predicted end is past), start from now.
+                    this.predictedSpeechEndTime = Math.max(now, this.predictedSpeechEndTime) + audioDurationMs;
+
+                    const timeUntilUnmute = this.predictedSpeechEndTime - now;
+                    const unmuteDelayMs = timeUntilUnmute + 1500; // Add 1.5s buffer for network/HeyGen latency
+
+                    console.log(`⏱️ [TIMER] Chunk: ${audioDurationMs.toFixed(0)}ms | Queue: ${timeUntilUnmute.toFixed(0)}ms | Unmute in: ${unmuteDelayMs.toFixed(0)}ms`);
+
+                    // Clear any existing timer - we are extending the deadline
+                    if (this.unmuteTimer) {
+                        clearTimeout(this.unmuteTimer);
+                    }
+
+                    // Set timer to unmute after TOTAL audio duration specific to this stream
+                    this.unmuteTimer = setTimeout(() => {
+                        console.log("⏰ [TIMER] Audio Playback Timer expired -> Unmuting Microphone");
+                        this.predictedSpeechEndTime = 0; // Reset
+                        if (this.onAvatarSpeakingEnd) {
+                            this.onAvatarSpeakingEnd();
+                        }
+                    }, unmuteDelayMs);
 
                     // Only process if socket still connected (session active)
                     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
@@ -259,6 +313,12 @@ KURALLAR:
     public disconnect() {
         console.log("🔌 Disconnecting Gemini...");
 
+        // Clear unmute timer
+        if (this.unmuteTimer) {
+            clearTimeout(this.unmuteTimer);
+            this.unmuteTimer = null;
+        }
+
         if (this.socket) {
             this.socket.close();
             this.socket = null;
@@ -268,5 +328,14 @@ KURALLAR:
         this.onAudioData = () => { };
 
         console.log("✓ Gemini disconnected");
+    }
+
+    /**
+     * Call this when avatar finishes speaking to unmute microphone
+     */
+    public notifyAvatarFinishedSpeaking() {
+        if (this.onAvatarSpeakingEnd) {
+            this.onAvatarSpeakingEnd();
+        }
     }
 }

@@ -9,6 +9,7 @@ import { LiveAvatarClient, AVATAR_EVENTS } from "@/lib/avatar/LiveAvatarClient";
 import { GeminiService } from "@/lib/services/geminiService";
 import { MicrophoneService } from "@/lib/services/microphoneService";
 import { FaceDetectionService } from "@/lib/services/faceDetectionService";
+import Image from "next/image";
 
 // Temporary tokens (In real app, fetch from backend)
 const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
@@ -24,6 +25,7 @@ export default function Home() {
   const { toggleContentVisible, isContentVisible } = useUIStore();
   const avatarVideoRef = useRef<HTMLVideoElement>(null);
   const sessionStarted = useRef(false); // Prevent double execution in Strict Mode
+  const audioEndHandlerRef = useRef<(() => void) | null>(null); // Store event handler for cleanup
   const [avatarClient, setAvatarClient] = useState<LiveAvatarClient | null>(null);
   const [microphoneService, setMicrophoneService] = useState<MicrophoneService | null>(null);
   const [geminiService, setGeminiService] = useState<GeminiService | null>(null);
@@ -100,8 +102,15 @@ export default function Home() {
         setAvatarSession(null);
       }
 
-      // 5. Clear video element
+      // 5. Clear video element and event listeners
       if (avatarVideoRef.current) {
+        // Remove event listeners
+        if (audioEndHandlerRef.current) {
+          avatarVideoRef.current.removeEventListener('playing', audioEndHandlerRef.current);
+          avatarVideoRef.current.removeEventListener('pause', audioEndHandlerRef.current);
+          avatarVideoRef.current.removeEventListener('ended', audioEndHandlerRef.current);
+          audioEndHandlerRef.current = null;
+        }
         avatarVideoRef.current.srcObject = null;
       }
 
@@ -160,29 +169,97 @@ export default function Home() {
         session.attach(avatarVideoRef.current);
       }
 
-      // 5. Initialize Gemini Service
+      // 5. Initialize Microphone (declared early to use in callbacks)
+      let microphoneInstance: MicrophoneService | null = null;
+
+      // 6. Initialize Gemini Service with microphone control callbacks
       const gemini = new GeminiService(
         (audioBase64) => {
           session.repeatAudio(audioBase64);
         },
         () => {
-          console.log("🛑 Gemini requested interruption -> Stopping Avatar");
-          session.interrupt();
+          console.log("🛑 Gemini requested interruption -> IGNORING (Barge-in disabled)");
+          // session.interrupt(); // Disabled to force avatar to finish speaking
+        },
+        () => {
+          // Avatar started speaking - MUTE microphone
+          if (microphoneInstance) {
+            microphoneInstance.mute();
+          }
+        },
+        () => {
+          // Avatar finished speaking - UNMUTE microphone
+          if (microphoneInstance) {
+            microphoneInstance.unmute();
+          }
         }
       );
       setGeminiService(gemini);
 
-      // 6. Connect Gemini to Live API
+      // 7. Connect Gemini to Live API
       await gemini.connect(GEMINI_API_KEY);
 
-      // 7. Start Microphone
+      // 8. Start Microphone
       const microphone = new MicrophoneService(
         (audioChunk) => {
           gemini.sendAudioChunk(audioChunk);
         }
       );
       await microphone.start();
+      microphoneInstance = microphone; // Assign to scoped variable
       setMicrophoneService(microphone);
+
+      // 9. Listen for video playback events to control microphone
+      const handleAudioStart = () => {
+        console.log("🔇 [EVENT] Video 'playing' - Muting microphone");
+        if (microphoneInstance) {
+          microphoneInstance.mute();
+        }
+      };
+
+      const handleAudioEnd = () => {
+        console.log("🔊 [EVENT] Video 'pause/ended' - Unmuting microphone");
+        gemini.notifyAvatarFinishedSpeaking();
+      };
+
+      // Monitor video element for debugging
+      const monitorVideoState = () => {
+        if (avatarVideoRef.current) {
+          const video = avatarVideoRef.current;
+          console.log("📹 [DEBUG] Video state:", {
+            paused: video.paused,
+            ended: video.ended,
+            readyState: video.readyState,
+            currentTime: video.currentTime,
+            duration: video.duration
+          });
+        }
+      };
+
+      if (avatarVideoRef.current) {
+        // Primary events
+        avatarVideoRef.current.addEventListener('playing', handleAudioStart);
+        avatarVideoRef.current.addEventListener('pause', handleAudioEnd);
+        avatarVideoRef.current.addEventListener('ended', handleAudioEnd);
+
+        // Additional events for debugging
+        avatarVideoRef.current.addEventListener('play', () => console.log("📹 [EVENT] play"));
+        avatarVideoRef.current.addEventListener('waiting', () => console.log("📹 [EVENT] waiting"));
+        avatarVideoRef.current.addEventListener('canplay', () => console.log("📹 [EVENT] canplay"));
+        avatarVideoRef.current.addEventListener('timeupdate', () => {
+          // Log every 5 seconds to avoid spam
+          const video = avatarVideoRef.current;
+          if (video && Math.floor(video.currentTime) % 5 === 0) {
+            console.log("📹 [EVENT] timeupdate -", video.currentTime.toFixed(2));
+          }
+        });
+
+        // Monitor state every 3 seconds
+        const monitorInterval = setInterval(monitorVideoState, 3000);
+
+        // Store handlers for cleanup
+        audioEndHandlerRef.current = handleAudioEnd;
+      }
 
       setIsSessionActive(true);
       setIsLoading(false); // Hide loading animation
@@ -201,6 +278,17 @@ export default function Home() {
       {/* 1. START SCREEN (Visible when session is NOT active) */}
       {!isSessionActive && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center animate-fade-in">
+          {/* Logo */}
+          <div className="mb-8 relative w-48 h-48 animate-fade-in-up">
+            <Image
+              src="/elazig-osb-logo.jpg"
+              alt="Elazığ OSB Logo"
+              fill
+              className="object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+              priority
+            />
+          </div>
+
           {/* Header Text */}
           <h1 className="text-4xl md:text-5xl font-bold mb-12 text-center tracking-wider drop-shadow-lg text-white">
             ELAZIĞ ORGANİZE SANAYİ MÜDÜRLÜĞÜ
@@ -210,15 +298,15 @@ export default function Home() {
           {isLoading ? (
             <div className="flex flex-col items-center gap-4">
               {/* Spinner */}
-              <div className="w-20 h-20 border-4 border-[#FFC107] border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-xl font-semibold text-[#FFC107] animate-pulse">
+              <div className="w-20 h-20 border-4 border-[#FBB03B] border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xl font-semibold text-[#FBB03B] animate-pulse">
                 Avatar Yükleniyor...
               </p>
             </div>
           ) : (
             <button
               onClick={startSession}
-              className="group relative px-8 py-5 bg-[#FFC107] hover:bg-[#FFD54F] text-black text-xl font-bold rounded-2xl shadow-[0_0_20px_rgba(255,193,7,0.5)] transition-all duration-300 transform hover:scale-105 active:scale-95 animate-breathing"
+              className="group relative px-8 py-5 bg-[#FBB03B] hover:bg-[#F15A24] text-white text-xl font-bold rounded-2xl shadow-[0_0_30px_rgba(251,176,59,0.4)] transition-all duration-300 transform hover:scale-105 active:scale-95 animate-breathing"
             >
               <span className="relative z-10 flex items-center gap-3">
                 ASİSTANA BAĞLANMAK İÇİN TIKLAYINIZ

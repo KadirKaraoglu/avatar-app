@@ -41,7 +41,7 @@ ENV NODE_ENV=production
 ENV PORT=8080
 ENV FRONTEND_PORT=3000
 
-# Start both services using concurrently (using shell form for cd commands)
-CMD concurrently --kill-others --names "BACKEND,FRONTEND" -c "blue,green" \
-    "cd backend && PORT=8080 npm start" \
-    "cd frontend && PORT=3000 npm start"
+# Start both services using concurrently (JSON format for proper signal handling)
+CMD ["concurrently", "--kill-others", "--names", "BACKEND,FRONTEND", "-c", "blue,green", \
+    "cd backend && PORT=8080 npm start", \
+    "cd frontend && PORT=3000 npm start"]
